@@ -145,16 +145,16 @@ async Task SetupAsync()
 
     await connection.OpenAsync();
 
-    await using (var dopCommand = connection.CreateCommand())
+    await using (var dropCommand = connection.CreateCommand())
     {
-        dopCommand.CommandText = "DROP TABLE IF EXISTS Test";
-        await dopCommand.ExecuteNonQueryAsync();
+        dropCommand.CommandText = "DROP TABLE IF EXISTS Test";
+        await dropCommand.ExecuteNonQueryAsync();
     }
 
-    await using (var creatCommand = connection.CreateCommand())
+    await using (var createCommand = connection.CreateCommand())
     {
-        creatCommand.CommandText = "CREATE TABLE Test (Id int PRIMARY KEY, Data xml NOT NULL)";
-        await creatCommand.ExecuteNonQueryAsync();
+        createCommand.CommandText = "CREATE TABLE Test (Id int PRIMARY KEY, Data xml NOT NULL)";
+        await createCommand.ExecuteNonQueryAsync();
     }
 
     for (var i = 0; i < 1000; i++)
