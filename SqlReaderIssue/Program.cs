@@ -142,7 +142,6 @@ return;
 async Task SetupAsync()
 {
     await using var connection = new SqlConnection(connectionString);
-
     await connection.OpenAsync();
 
     await using (var dropCommand = connection.CreateCommand())
@@ -159,13 +158,11 @@ async Task SetupAsync()
 
     for (var i = 0; i < 1000; i++)
     {
-        await using (var insertCommand = connection.CreateCommand())
-        {
-            insertCommand.CommandText = "INSERT INTO Test (Id, Data) VALUES (@id, @data)";
-            insertCommand.Parameters.AddWithValue("@id", i);
-            insertCommand.Parameters.AddWithValue("@data", xml);
-            await insertCommand.ExecuteNonQueryAsync();
-        }
+        await using var insertCommand = connection.CreateCommand();
+        insertCommand.CommandText = "INSERT INTO Test (Id, Data) VALUES (@id, @data)";
+        insertCommand.Parameters.AddWithValue("@id", i);
+        insertCommand.Parameters.AddWithValue("@data", xml);
+        await insertCommand.ExecuteNonQueryAsync();
     }
 }
 
@@ -173,29 +170,25 @@ async Task TestAsync()
 {
     var id = 0;
 
-    await using (var connection = new SqlConnection(connectionString))
+    await using var connection = new SqlConnection(connectionString);
+    await connection.OpenAsync();
+
+    await using var command = connection.CreateCommand();
+    command.CommandText = "SELECT Data FROM Test ORDER BY Id";
+
+    await using var reader = await command.ExecuteReaderAsync();
+    while (await reader.ReadAsync())
     {
-        await connection.OpenAsync();
-
-        await using (var command = connection.CreateCommand())
+        Console.WriteLine($"id: {id}");
+        try
         {
-            command.CommandText = "SELECT Data FROM Test ORDER BY Id";
-
-            await using var reader = await command.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                Console.WriteLine($"id: {id}");
-                try
-                {
-                    var result = reader.GetString(0);
-                    Debug.Assert(result.Length > 0);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                }
-                id++;
-            }
+            var result = reader.GetString(0);
+            Debug.Assert(result.Length > 0);
         }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+        id++;
     }
 }
